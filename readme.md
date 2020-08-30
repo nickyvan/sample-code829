@@ -1,7 +1,7 @@
 # Start Back End
   1. From root, run npm install
   2. Then, run npm start 
-  3. server runs on port 5000
+  3. Server runs on port 5000
 # Start Front End
   1. From root, cd frontend
   2. Next, run npm install
