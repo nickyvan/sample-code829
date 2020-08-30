@@ -10,4 +10,4 @@
 # Demo
   You can see demo by url:https://shareimage829.herokuapp.com/
 
-  **Thank you for watching**
+  **Thank you**
