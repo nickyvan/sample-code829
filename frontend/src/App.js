@@ -1,74 +1,76 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import {
+  BrowserRouter as Router,
+  Route,
+  Redirect,
+  Switch
+} from 'react-router-dom';
 
-import Header from './components/Header/Header';
-import NewBook from './components/Books/NewBook';
-import BookList from './components/Books/BookList';
-import './App.css';
+import Users from './user/pages/Users';
+import NewPlace from './places/pages/NewPlace';
+import UserPlaces from './places/pages/UserPlaces';
+import UpdatePlace from './places/pages/UpdatePlace';
+import Auth from './user/pages/Auth';
+import MainNavigation from './shared/components/Navigation/MainNavigation';
+import { AuthContext } from './shared/context/auth-context';
+import { useAuth } from './shared/hooks/auth-hook';
 
-function App() {
-  const [loadedBooks, setLoadedBooks] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+const App = () => {
+  const { token, login, logout, userId } = useAuth();
 
-  useEffect(() => {
-    const fetchBooks = async () => {
-      setIsLoading(true);
-      const response = await fetch('http://localhost:5000/books');
+  let routes;
 
-      const responseData = await response.json();
-
-      setLoadedBooks(responseData.books);
-      setIsLoading(false);
-    };
-
-    fetchBooks();
-  }, []);
-
-  const addBookHandler = async (bookName, bookPrice) => {
-    try {
-      const newBook = {
-        title: bookName,
-        price: +bookPrice // "+" to convert string to number
-      };
-      let hasError = false;
-      const response = await fetch('http://localhost:5000/book', {
-        method: 'POST',
-        body: JSON.stringify(newBook),
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        hasError = true;
-      }
-
-      const responseData = await response.json();
-
-      if (hasError) {
-        throw new Error(responseData.message);
-      }
-
-      setLoadedBooks(prevBooks => {
-        return prevBooks.concat({
-          ...newBook,
-          id: responseData.book.id
-        });
-      });
-    } catch (error) {
-      alert(error.message || 'Something went wrong!');
-    }
-  };
+  if (token) {
+    routes = (
+      <Switch>
+        <Route path="/" exact>
+          <Users />
+        </Route>
+        <Route path="/:userId/places" exact>
+          <UserPlaces />
+        </Route>
+        <Route path="/places/new" exact>
+          <NewPlace />
+        </Route>
+        <Route path="/places/:placeId">
+          <UpdatePlace />
+        </Route>
+        <Redirect to="/" />
+      </Switch>
+    );
+  } else {
+    routes = (
+      <Switch>
+        <Route path="/" exact>
+          <Users />
+        </Route>
+        <Route path="/:userId/places" exact>
+          <UserPlaces />
+        </Route>
+        <Route path="/auth">
+          <Auth />
+        </Route>
+        <Redirect to="/auth" />
+      </Switch>
+    );
+  }
 
   return (
-    <>
-      <Header />
-      <main>
-        <NewBook onAddBook={addBookHandler} />
-        {isLoading && <p className="loader">Loading...</p>}
-        {!isLoading && <BookList items={loadedBooks} />}
-      </main>
-    </>
+    <AuthContext.Provider
+      value={{
+        isLoggedIn: !!token,
+        token: token,
+        userId: userId,
+        login: login,
+        logout: logout
+      }}
+    >
+      <Router>
+        <MainNavigation />
+        <main>{routes}</main>
+      </Router>
+    </AuthContext.Provider>
   );
-}
+};
 
 export default App;
